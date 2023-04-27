@@ -2,6 +2,8 @@ import fs from 'fs';
 import { join, basename } from 'path';
 import prettyBytes from 'pretty-bytes';
 import mime from 'mime-types';
+import { TEMP_DIR, TRANSFER_DIR, TRANSFER_DIR_UPLOAD } from '../../config.js';
+import { get as getTask, update as updateTask } from './task_manager.js';
 
 export const downloadFile = (req, res) => {
   const filePath = req.query.file;
@@ -21,7 +23,7 @@ export const uploadFile = (req, res) => {
   }
   checkMainDirectories();
   if (typeof req.files['file'] === 'object' && req.files['file']['name']) {
-    const filePath = join(process.env.TRANSFER_DIR_UPLOAD, req.files['file']['name']);
+    const filePath = join(TRANSFER_DIR_UPLOAD, req.files['file']['name']);
     //   req.files['files'].mv(filePath);
     const ws = fs.createWriteStream(filePath);
     ws.write(req.files['file'].data);
@@ -30,11 +32,47 @@ export const uploadFile = (req, res) => {
   // console.log(error);
 };
 
+export const uploadLargeFile = (req, res) => {
+  try {
+    if (!req.files || Object.keys(req.files).length === 0) {
+      return res.status(400).send('No files were uploaded.');
+    }
+    checkMainDirectories();
+    if (typeof req.files['file'] === 'object' && req.files['file']['name']) {
+      const task = getTask(req.params.id);
+      const chunk = req.query.chunk;
+      const filePath = task.path;
+      // console.log(`Receieved chunk ${chunk} / ${task.totalChunk} for task ${task.id}`);
+      if (!fs.existsSync(filePath)) {
+        res.status(500).send('Host deleted or removed file');
+        return;
+      }
+      const ws = fs.createWriteStream(filePath, { flags: 'a' });
+      ws.write(req.files['file'].data);
+      task.lastChunk = chunk;
+      updateTask(task.id, task);
+      if (chunk == task.totalChunk) {
+        if (fs.existsSync(join(TRANSFER_DIR_UPLOAD, task.name))) {
+          task.name = task.id + '__' + task.name;
+        }
+        renameFile(filePath, join(TRANSFER_DIR_UPLOAD, task.name));
+        // console.log('File Uploaded');
+        res.status(201).send('File Uploaded');
+      } else {
+        res.status(200).send('Chunk Uploaded');
+      }
+    }
+  } catch (error) {
+    // console.log(error);
+    res.status(500).send('Something Went Wrong');
+  }
+};
+
 export const readTransferDir = () => {
-  if (fs.existsSync(process.env.TRANSFER_DIR)) {
-    return readDir('transfer', process.env.TRANSFER_DIR);
+  if (fs.existsSync(TRANSFER_DIR)) {
+    return readDir('transfer', TRANSFER_DIR);
   } else {
-    fs.mkdirSync(process.env.TRANSFER_DIR);
+    fs.mkdirSync(TRANSFER_DIR);
     return false;
   }
 };
@@ -69,10 +107,23 @@ function getContentType(filePath) {
 }
 
 function checkMainDirectories() {
-  if (!fs.existsSync(process.env.TRANSFER_DIR)) {
-    fs.mkdirSync(process.env.TRANSFER_DIR);
+  if (!fs.existsSync(TRANSFER_DIR)) {
+    fs.mkdirSync(TRANSFER_DIR);
   }
-  if (!fs.existsSync(process.env.TRANSFER_DIR_UPLOAD)) {
-    fs.mkdirSync(process.env.TRANSFER_DIR_UPLOAD);
+  if (!fs.existsSync(TRANSFER_DIR_UPLOAD)) {
+    fs.mkdirSync(TRANSFER_DIR_UPLOAD);
   }
+  if (!fs.existsSync(TEMP_DIR)) {
+    fs.mkdirSync(TEMP_DIR);
+  }
+}
+
+function renameFile(oldPath, newPath) {
+  fs.rename(oldPath, newPath, (err) => {
+    if (err) {
+      // console.log(err);
+      return false;
+    }
+    return true;
+  });
 }

@@ -1,4 +1,4 @@
-import { uploadFile, downloadFile, readTransferDir } from '../utils/file_manager.js';
+import { uploadFile, downloadFile, readTransferDir, uploadLargeFile } from '../utils/file_manager.js';
 
 export const download = (req, res) => {
   try {
@@ -12,6 +12,14 @@ export const download = (req, res) => {
 export const upload = (req, res) => {
   try {
     uploadFile(req, res);
+  } catch (error) {
+    res.status(500).send('Something Went Wrong');
+  }
+};
+
+export const uploadLarge = (req, res) => {
+  try {
+    uploadLargeFile(req, res);
   } catch (error) {
     res.status(500).send('Something Went Wrong');
   }
