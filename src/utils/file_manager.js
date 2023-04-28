@@ -48,19 +48,26 @@ export const uploadLargeFile = (req, res) => {
         return;
       }
       const ws = fs.createWriteStream(filePath, { flags: 'a' });
-      ws.write(req.files['file'].data);
-      task.lastChunk = chunk;
-      updateTask(task.id, task);
-      if (chunk == task.totalChunk) {
-        if (fs.existsSync(join(TRANSFER_DIR_UPLOAD, task.name))) {
-          task.name = task.id + '__' + task.name;
+      ws.write(req.files['file'].data, (err) => {
+        if (err) {
+          // console.log(err);
+          res.status(500).send('Host Error');
+        } else {
+          task.lastChunk = chunk;
+          updateTask(task.id, task);
+          if (chunk == task.totalChunk) {
+            // console.log('transfer complete');
+            if (fs.existsSync(join(TRANSFER_DIR_UPLOAD, task.name))) {
+              task.name = task.id + '__' + task.name;
+            }
+            renameFile(filePath, join(TRANSFER_DIR_UPLOAD, task.name));
+            // console.log('File Uploaded');
+            res.status(201).send('File Uploaded');
+          } else {
+            res.status(200).send('Chunk Uploaded');
+          }
         }
-        renameFile(filePath, join(TRANSFER_DIR_UPLOAD, task.name));
-        // console.log('File Uploaded');
-        res.status(201).send('File Uploaded');
-      } else {
-        res.status(200).send('Chunk Uploaded');
-      }
+      });
     }
   } catch (error) {
     // console.log(error);
