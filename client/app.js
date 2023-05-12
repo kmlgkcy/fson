@@ -1,6 +1,6 @@
 import { join } from 'path';
 import selectInterface from './src/utils/start_server.js';
-import startServer from './src/server.js';
+import startServer from './src/transfer_api/api.js';
 import connect from './src/utils/connect.js';
 
 process.env.DIR = process.cwd();

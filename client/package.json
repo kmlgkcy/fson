@@ -1,11 +1,12 @@
 {
-  "name": "sharef",
+  "name": "fson-host",
   "type": "module",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "",
   "main": "app.js",
   "scripts": {
-    "dev": "npx nodemon app.js"
+    "dev": "npx nodemon app.js",
+    "build": "ncc build  -o build/lib run.cjs && pkg --target node18-win-x64 -o build/MY-API.exe ./build/lib/index.cjs"
   },
   "author": "kmlgkcy.dev@gmail.com",
   "license": "None",

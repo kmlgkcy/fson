@@ -19,7 +19,7 @@ server.use(
 server.use(cors());
 server.use(express.json());
 
-server.use(router);
+server.use(cors(), router);
 
 const startServer = (adress) => {
   return new Promise((resolve, reject) => {

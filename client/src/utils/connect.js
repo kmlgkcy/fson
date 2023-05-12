@@ -65,7 +65,7 @@ const pwd = () => {
 
 const connect = async (host, code, password) => {
   try {
-    await got.put(`http://192.168.0.21:5000/room?code=${code}&password=${password}`, {
+    await got.put(`http://fsonhostmain-001-site1.ctempurl.com/room?code=${code}&password=${password}`, {
       form: {
         host: host,
       },
