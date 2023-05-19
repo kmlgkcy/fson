@@ -1,0 +1,21 @@
+{
+    "action": {
+        "cancel": "Cancel",
+        "send": "Send",
+        "okay": "Ok",
+        "logOut": "Log Out",
+        "download": "Download",
+        "upload": "Upload"
+    },
+    "message": {
+        "unexpected": "Unexpected internal error. Try again later.",
+        "hostNotProvidedAnyFile": "Host not provided any file yet",
+        "hostNotOnline": "Host offline",
+        "upload": "To upload files to host drag and drop or select"
+    },
+    "title": {
+        "error": "An error occured",
+        "fileName": "File Name",
+        "fileSize": "Size"
+    }
+}
