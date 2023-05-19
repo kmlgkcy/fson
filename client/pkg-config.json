@@ -1,0 +1,5 @@
+{
+    "entry": "app.js",
+    "target": "node18",
+    "output": "build/"
+}

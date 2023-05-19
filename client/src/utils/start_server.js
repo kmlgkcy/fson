@@ -1,18 +1,9 @@
-import { networkInterfaces } from 'os';
-const interfaces = networkInterfaces();
+import { availableInterfaces } from './network_interfaces.js';
 
 export default () => {
   const stdin = process.openStdin();
 
-  let selectableInterfaces = [];
-
-  Object.keys(interfaces).forEach((intrfce, i) => {
-    interfaces[intrfce].forEach((network, j) => {
-      if (network && network.family === 'IPv4') {
-        selectableInterfaces.push({ name: intrfce, address: network.address });
-      }
-    });
-  });
+  let selectableInterfaces = availableInterfaces();
 
   exitIfNoInterfaceFound();
 

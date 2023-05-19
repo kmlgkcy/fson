@@ -5,18 +5,19 @@ export const downloadFile = (req, res) => {
   try {
     download(req, res);
   } catch (error) {
+    console.log(error);
     res.status(500).send('Critical Host Error');
   }
 };
 
-export const uploadFile = (req, res) => {
+export const uploadFile = async (req, res) => {
   try {
     if (!req.files || Object.keys(req.files).length === 0) {
       res.status(400).send('No files were uploaded.');
       return;
     }
     if (typeof req.files['file'] === 'object' && req.files['file']['name']) {
-      upload(req, res);
+      await upload(req, res);
     } else {
       res.status(409).send('Files not uploaded in valid way');
     }

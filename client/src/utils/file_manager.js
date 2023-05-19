@@ -1,73 +1,96 @@
 import fs from 'fs';
+import fse from 'fs-extra';
 import { basename, join } from 'path';
 
 import prettyBytes from 'pretty-bytes';
-
-export const deliver = (path) => {
+export const deliver = (path, res) => {
   if (!fileExists(path)) {
-    return {
+    throw {
       kind: FMErrorCodes.NOT_EXISTS,
       message: 'Relevant file deleted or moved',
     };
   }
   const file = fs.createReadStream(path);
-  const stats = fs.statSync(path);
-  return {
-    success: true,
-    pipe: file.pipe,
-    stats: stats,
-  };
+  file.pipe(res);
 };
 
-export const receive = (path, data) => {
+export const receive = async (path, data) => {
   if (!fileExists(path)) {
     return {
       kind: FMErrorCodes.NOT_EXISTS,
       message: 'Relevant file deleted or moved',
     };
   }
-  const ws = fs.createWriteStream(path, { flags: 'a' });
-  ws.write(data, (err) => {
-    if (err) {
-      console.log(err);
-      return {
-        kind: FMErrorCodes.UNKNOWN,
-        message: 'Something went wrong while receiving file',
-      };
-    } else {
-      return {
-        success: true,
-      };
-    }
-  });
+  try {
+    await fs.promises.writeFile(path, data, { flag: 'a' });
+    return { success: true };
+  } catch (err) {
+    console.error(err);
+    return {
+      kind: FMErrorCodes.UNKNOWN,
+      message: 'Something went wrong while receiving the file',
+    };
+  }
+};
+
+export const extractStats = async (path) => {
+  if (!fileExists(path)) {
+    return {
+      kind: FMErrorCodes.NOT_EXISTS,
+      message: 'Relevant file deleted or moved',
+    };
+  }
+  const stats = await fs.promises.stat(path);
+  return {
+    success: true,
+    stats: stats,
+  };
 };
 
 export const fileExists = (path) => {
   return fs.existsSync(path);
 };
 
-export const extractDir = (dirPath) => {
-  let directory = {
+export const extractDir = async (dirPath) => {
+  const directory = {
     name: basename(dirPath),
     files: [],
     subdirs: [],
   };
 
-  fs.readdirSync(dirPath, { withFileTypes: true }).map((item) => {
-    if (item.isDirectory()) {
-      directory.subdirs.push(readDir(item.name, join(dirPath, item.name)));
-    } else {
-      if (item.isFile) {
-        return directory.files.push({
+  try {
+    const items = await fs.promises.readdir(dirPath, { withFileTypes: true });
+
+    for (const item of items) {
+      if (item.isDirectory()) {
+        const subdir = await extractDir(join(dirPath, item.name));
+        directory.subdirs.push(subdir);
+      } else if (item.isFile()) {
+        const filePath = join(dirPath, item.name);
+        const stats = await fs.promises.stat(filePath);
+
+        directory.files.push({
           name: item.name,
           type: getFileType(item.name),
-          size: prettyBytes(fs.statSync(join(dirPath, item.name)).size),
-          path: join(dirPath, item.name),
+          size: prettyBytes(stats.size),
+          path: filePath,
         });
       }
     }
-  });
+  } catch (error) {
+    console.error(error);
+  }
+
   return directory;
+};
+
+export const extractFileInfo = (path, size) => {
+  return {
+    name: basename(path),
+    type: getFileType(path),
+    size: prettyBytes(size),
+    path: path,
+  };
 };
 
 export const makeDirSafe = (path) => {
@@ -89,6 +112,21 @@ export const renameFile = (oldPath, newPath) => {
       success: true,
     };
   });
+};
+export const removeDir = async (path) => {
+  try {
+    await fse.emptyDir(path);
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export const removeFile = async (path) => {
+  try {
+    await fse.remove(path);
+  } catch (error) {
+    console.log(error);
+  }
 };
 
 export const getFileType = (file) => {
