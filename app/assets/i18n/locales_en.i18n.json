@@ -1,0 +1,28 @@
+{
+    "action": {
+        "cancel": "Cancel",
+        "send": "Send",
+        "okay": "Ok",
+        "login": "Login",
+        "logOut": "Log Out"
+    },
+    "message": {
+        "cannotBeNull": "{{field}} must be filled",
+        "minCharacter": "{{field}} must be at least {{length}} character long",
+        "maxCharacter": "{{field}} cannot exceed {{length}} character",
+        "mustBeAlphaNumeric": "{{field}} must be alphanumeric cannot contain special characters",
+        "notFound": "We did not find any room with given credentinals",
+        "unexpected": "Unexpected internal error. Try again later."
+    },
+    "title": {
+        "auth": "Admin Login",
+        "error": "An error occured",
+        "room": "Room",
+        "downloads": "Downloads",
+        "password": "Password",
+        "fileName": "File Name",
+        "fileSize": "Size",
+        "roomOnline": "Room Online",
+        "roomOffline": "Room Offline"
+    }
+}
